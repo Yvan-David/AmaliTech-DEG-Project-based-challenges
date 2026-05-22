@@ -24,9 +24,8 @@ app = FastAPI(title="Pulse-Check API — Watchdog Sentinel")
 async def startup() -> None:
     client = redis.from_url(REDIS_URL, decode_responses=False)
     store = RedisStore(client)
-    svc.init(store)           # inject store into service layer
-    start_watcher(store)      # start background expiry poller
-
+    svc.init(store)           
+    start_watcher(store)    
 
 # mount routes
 from app.routes.monitors import router  # noqa: E402

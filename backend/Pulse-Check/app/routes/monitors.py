@@ -40,7 +40,7 @@ async def heartbeat(monitor_id: str):
     monitor = svc.heartbeat(monitor_id)
 
     if monitor is None:
-        # Distinguish between "never existed" and "went down" with a clear message
+       
         existing = svc.get_one(monitor_id)
         if existing and existing.status == MonitorStatus.down:
             raise HTTPException(
@@ -102,7 +102,6 @@ async def get_monitor(monitor_id: str):
     if monitor is None:
         raise HTTPException(status_code=404, detail=f"Monitor '{monitor_id}' not found.")
 
-    # Attach live countdown from Redis TTL — free bonus for the README
     ttl = svc.get_ttl(monitor_id)
     data = monitor.model_dump()
     data["seconds_remaining"] = max(ttl, 0)

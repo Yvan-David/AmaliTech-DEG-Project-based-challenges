@@ -1,19 +1,9 @@
 """
-redis_store.py — Thin Redis I/O layer.
 
 Key schema (two keys per monitor):
   monitor:{id}        → JSON blob, no TTL  — source of truth, survives expiry
   monitor:{id}:timer  → tiny key, TTL=timeout — its disappearance IS the alert
 
-Why two keys?
-  We need the monitor data (email, status, etc.) to outlive the timer so the
-  watcher can read it after expiry and fire a meaningful alert. Storing state
-  and TTL in the same key would delete everything on expiry — we'd lose context.
-
-Why poll instead of Redis keyspace notifications?
-  Keyspace notifications require `notify-keyspace-events` to be enabled on the
-  Redis server — off by default in managed Redis (ElastiCache, Upstash, etc.).
-  A 1-second polling loop is simpler, portable, and negligible CPU cost.
 """
 
 from __future__ import annotations
@@ -37,7 +27,6 @@ class RedisStore:
     def __init__(self, client: _redis.Redis) -> None:
         self._r = client
 
-    # ── internal helpers ───────────────────────────────────────────────────
 
     def _load(self, id: str) -> Optional[Monitor]:
         raw = self._r.get(_mkey(id))
@@ -54,8 +43,6 @@ class RedisStore:
 
     def _disarm_timer(self, id: str) -> None:
         self._r.delete(_tkey(id))
-
-    # ── public API (all O(1) except get_expired_ids) ───────────────────────
 
     def create(self, monitor: Monitor) -> None:
         self._save(monitor)
@@ -100,7 +87,7 @@ class RedisStore:
 
     def get_expired_ids(self) -> list[str]:
         """
-        O(n) scan — find active monitors whose timer key has disappeared.
+        scan — find active monitors whose timer key has disappeared.
         Called once per second by the watcher; n is total monitor count.
         """
         expired: list[str] = []

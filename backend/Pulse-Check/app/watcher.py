@@ -9,8 +9,7 @@ import logging
 import threading
 import time
 from datetime import datetime, timezone
-from zoneinfo import ZoneInfo          # stdlib, Python 3.9+
-
+from zoneinfo import ZoneInfo         
 import httpx
 
 from app.mailer import send_alert_email
@@ -24,7 +23,7 @@ CAT = ZoneInfo("Africa/Kigali")        # UTC+2, no DST
 def _readable_time() -> str:
     """Return current time in Rwanda as e.g. 'Monday, 23 Jun 2025 at 8:50 PM'"""
     now_cat = datetime.now(CAT)
-    return now_cat.strftime("%A, %d %b %Y at %-I:%M %p")   # e.g. Monday, 23 Jun 2025 at 8:50 PM
+    return now_cat.strftime("%A, %d %b %Y at %-I:%M %p")  
 
 
 def _fire_alert(monitor, store: RedisStore) -> None:

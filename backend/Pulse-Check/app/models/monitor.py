@@ -14,7 +14,6 @@ class MonitorCreate(BaseModel):
     id: str = Field(..., examples=["device-123"])
     timeout: int = Field(..., gt=0, examples=[60], description="Countdown duration in seconds")
     alert_email: str = Field(..., examples=["admin@critmon.com"])
-    # Developer's Choice: optional webhook URL for real-time push alerts
     webhook_url: Optional[str] = Field(None, examples=["https://hooks.example.com/alert"])
 
 
@@ -27,7 +26,6 @@ class Monitor(BaseModel):
     created_at: datetime
     expires_at: datetime
     last_heartbeat: Optional[datetime] = None
-    # Tracks how many times this device has gone down — useful for maintenance history
     alert_count: int = 0
 
 

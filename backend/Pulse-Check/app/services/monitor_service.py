@@ -1,15 +1,5 @@
 """
-monitor_service.py — Business logic layer (Redis edition).
-
-Complexity is unchanged from the in-memory version:
-  register   O(1)   create/replace
-  heartbeat  O(1)   reset timer
-  pause      O(1)   stop timer
-  get_one    O(1)   lookup
-  delete     O(1)   remove
-  get_all    O(n)   unavoidable full scan
-
-The asyncio.Task-per-monitor pattern is replaced by the two-key Redis
+two-key Redis
 scheme (data key + TTL key). The watcher thread plays the role that
 CancelledError + sleep() played before — detecting expiry and firing alerts.
 """
@@ -22,7 +12,6 @@ from typing import List, Optional, Tuple
 from app.models.monitor import Monitor, MonitorCreate, MonitorStatus
 from app.store.redis_store import RedisStore
 
-# Injected at startup by main.py
 _store: RedisStore | None = None
 
 
@@ -46,10 +35,8 @@ def _expires_at(timeout: int) -> datetime:
     return datetime.fromtimestamp(_utc_now().timestamp() + timeout, tz=timezone.utc)
 
 
-# ── Public API ─────────────────────────────────────────────────────────────────
-
 def register(data: MonitorCreate) -> Tuple[Monitor, bool]:
-    """O(1) — create or replace a monitor."""
+    """ — create or replace a monitor."""
     store = _store_or_raise()
     existed = store.exists(data.id)
 
@@ -68,7 +55,7 @@ def register(data: MonitorCreate) -> Tuple[Monitor, bool]:
 
 def heartbeat(monitor_id: str) -> Optional[Monitor]:
     """
-    O(1) — reset the countdown.
+     — reset the countdown.
     Un-pauses a paused monitor automatically.
     Returns None when the monitor is down or doesn't exist.
     """
@@ -86,7 +73,7 @@ def heartbeat(monitor_id: str) -> Optional[Monitor]:
 
 
 def pause(monitor_id: str) -> Optional[Monitor]:
-    """O(1) — freeze the countdown. No-op if already paused."""
+    """ — freeze the countdown. No-op if already paused."""
     store = _store_or_raise()
     monitor = store.get(monitor_id)
 
@@ -101,12 +88,12 @@ def pause(monitor_id: str) -> Optional[Monitor]:
 
 
 def get_one(monitor_id: str) -> Optional[Monitor]:
-    """O(1) — single lookup."""
+    """ — single lookup."""
     return _store_or_raise().get(monitor_id)
 
 
 def get_all() -> List[Monitor]:
-    """O(n) — full scan, unavoidable."""
+    """ — full scan, unavoidable."""
     store = _store_or_raise()
     result = []
     for raw_key in store._r.keys("monitor:*"):
@@ -121,10 +108,10 @@ def get_all() -> List[Monitor]:
 
 
 def delete(monitor_id: str) -> bool:
-    """O(1) — remove monitor and cancel its timer."""
+    """ — remove monitor and cancel its timer."""
     return _store_or_raise().delete(monitor_id)
 
 
 def get_ttl(monitor_id: str) -> int:
-    """O(1) — seconds remaining; -2 if expired/gone."""
+    """ — seconds remaining; -2 if expired/gone."""
     return _store_or_raise().ttl(monitor_id)

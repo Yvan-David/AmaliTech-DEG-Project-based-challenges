@@ -4,7 +4,7 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "backend/Pulse-Check/**"         
+      - "backend/Pulse-Check/**"
       - ".github/workflows/ci.yml"
   pull_request:
     branches: ["main"]
@@ -17,7 +17,8 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: backend/Pulse-Check 
+        working-directory: backend/Pulse-Check
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -34,11 +35,6 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('backend/Pulse-Check/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-
-      - name: Debug working directory
-        run: |
-          pwd
-          ls -la
 
       - name: Install dependencies
         run: |
@@ -64,3 +60,38 @@ jobs:
           COVERALLS_PARALLEL: false
         run: |
           coveralls --verbose
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test                  
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3 
+      - name: Extract metadata for image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/pulse-check
+          tags: |
+            type=raw,value=latest
+            type=sha,prefix=sha-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: backend/Pulse-Check  
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha       
+          cache-to: type=gha,mode=max

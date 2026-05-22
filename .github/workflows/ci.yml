@@ -35,6 +35,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      - name: Debug working directory
+        run: |
+          pwd
+          ls -la
+
       - name: Install dependencies
         run: |
           pip install --upgrade pip

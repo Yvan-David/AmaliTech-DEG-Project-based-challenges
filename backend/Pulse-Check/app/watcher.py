@@ -1,9 +1,5 @@
 """
 watcher.py — Background thread that polls for expired timers.
-
-Runs as a daemon thread started at application startup.
-One iteration per second; each iteration is O(n) in monitor count
-but does only lightweight Redis key checks — negligible in practice.
 """
 
 from __future__ import annotations
@@ -13,25 +9,46 @@ import logging
 import threading
 import time
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo          # stdlib, Python 3.9+
 
 import httpx
 
+from app.mailer import send_alert_email
 from app.store.redis_store import RedisStore
 
 logger = logging.getLogger("watcher")
 
+CAT = ZoneInfo("Africa/Kigali")        # UTC+2, no DST
+
+
+def _readable_time() -> str:
+    """Return current time in Rwanda as e.g. 'Monday, 23 Jun 2025 at 8:50 PM'"""
+    now_cat = datetime.now(CAT)
+    return now_cat.strftime("%A, %d %b %Y at %-I:%M %p")   # e.g. Monday, 23 Jun 2025 at 8:50 PM
+
 
 def _fire_alert(monitor, store: RedisStore) -> None:
+    alert_time = _readable_time()
+
     payload = {
         "ALERT": f"Device {monitor.id} is down!",
-        "time": datetime.now(timezone.utc).isoformat(),
+        "time": alert_time,
         "alert_email": monitor.alert_email,
         "alert_count": monitor.alert_count,
     }
-    # Required by spec
+
+    # Console log (required by spec)
     logger.critical(json.dumps(payload))
 
-    # Developer's Choice: push to webhook if configured
+    # Real email alert
+    send_alert_email(
+        to=monitor.alert_email,
+        device_id=monitor.id,
+        alert_time=alert_time,
+        alert_count=monitor.alert_count,
+    )
+
+    # Webhook (Developer's Choice)
     if monitor.webhook_url:
         try:
             httpx.post(monitor.webhook_url, json=payload, timeout=5)

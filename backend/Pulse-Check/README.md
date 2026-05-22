@@ -52,7 +52,8 @@ The system consists of:
 
 Creates a new monitoring entry for a device.
 
+[![Coverage Status](https://coveralls.io/repos/github/Yvan-David/AmaliTech-DEG-Project-based-challenges/badge.svg?branch=main)](https://coveralls.io/github/Yvan-David/AmaliTech-DEG-Project-based-challenges?branch=main&flag=Pulse-Check)
+
 ```http
 POST /monitors
 
-[![Coverage Status](https://coveralls.io/repos/github/Yvan-David/AmaliTech-DEG-Project-based-challenges/badge.svg?branch=main)](https://coveralls.io/github/Yvan-David/AmaliTech-DEG-Project-based-challenges?branch=main)

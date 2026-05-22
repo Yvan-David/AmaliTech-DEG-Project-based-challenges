@@ -4,12 +4,12 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "AmaliTech-DEG-Project-based-challenges/backend/Pulse-Check/**"       
+      - "Pulse-Check/**"       
       - ".github/workflows/ci.yml"
   pull_request:
     branches: ["main"]
     paths:
-      - "AmaliTech-DEG-Project-based-challenges/backend/Pulse-Check/**"
+      - "Pulse-Check/**"
       - ".github/workflows/ci.yml"
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: AmaliTech-DEG-Project-based-challenges/backend/Pulse-Check 
+        working-directory: Pulse-Check 
 
     steps:
       - name: Checkout code

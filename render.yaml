@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: pulse-check-api
+    runtime: docker
+    repo: https://github.com/Yvan-David/AmaliTech-DEG-Project-based-challenges
+    branch: main
+    rootDir: backend/Pulse-Check
+    dockerfilePath: ./Dockerfile
+    plan: free

@@ -111,6 +111,24 @@ def delete(monitor_id: str) -> bool:
     """ — remove monitor and cancel its timer."""
     return _store_or_raise().delete(monitor_id)
 
+def reset(monitor_id: str) -> Optional[Monitor]:
+    """
+    O(1) — recover a downed monitor.
+    Restarts the timer and sets status back to active.
+    Preserves all config and keeps alert_count as historical record.
+    Only valid when status is 'down'.
+    """
+    store = _store_or_raise()
+    monitor = store.get(monitor_id)
+
+    if not monitor or monitor.status != MonitorStatus.down:
+        return None
+
+    monitor.status = MonitorStatus.active
+    monitor.last_heartbeat = None       # device hasn't proven itself yet
+    monitor.expires_at = _expires_at(monitor.timeout)
+    store.save_and_rearm(monitor)
+    return monitor
 
 def get_ttl(monitor_id: str) -> int:
     """ — seconds remaining; -2 if expired/gone."""

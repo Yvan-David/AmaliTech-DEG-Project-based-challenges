@@ -117,7 +117,43 @@ async def get_monitor(monitor_id: str):
         )
     return monitor
     
+@router.post(
+    "/{monitor_id}/reset",
+    response_model=MonitorResponse,
+    summary="Reset a down monitor — brings it back online",
+)
+async def reset_monitor(monitor_id: str):
+    """
+    Recover a downed monitor without deleting and re-registering it.
+    Clears the 'down' status and restarts the countdown timer.
+    All configuration (email, webhook, timeout) is preserved.
+    Only works on monitors with status 'down' — returns 409 for active/paused.
+    """
+    monitor = svc.get_one(monitor_id)
 
+    if monitor is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Monitor '{monitor_id}' not found.",
+        )
+
+    if monitor.status != MonitorStatus.down:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": f"Monitor '{monitor_id}' is not down.",
+                "current_status": monitor.status,
+                "hint": "Reset is only for recovering a downed monitor.",
+            },
+        )
+
+    recovered = svc.reset(monitor_id)
+    return MonitorResponse(
+        message="Monitor recovered. Countdown restarted. Awaiting first heartbeat.",
+        monitor_id=recovered.id,
+        status=recovered.status,
+        expires_at=recovered.expires_at,
+    )
 
 @router.delete(
     "/{monitor_id}",

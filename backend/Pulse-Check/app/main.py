@@ -30,3 +30,4 @@ async def startup() -> None:
 # mount routes
 from app.routes.monitors import router  # noqa: E402
 app.include_router(router)
+app.include_router(health_router)

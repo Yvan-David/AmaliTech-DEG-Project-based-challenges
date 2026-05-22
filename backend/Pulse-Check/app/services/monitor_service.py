@@ -34,11 +34,29 @@ def _utc_now() -> datetime:
 def _expires_at(timeout: int) -> datetime:
     return datetime.fromtimestamp(_utc_now().timestamp() + timeout, tz=timezone.utc)
 
+class MonitorAlreadyExistsError(Exception):
+    def __init__(self, monitor: Monitor):
+        self.monitor = monitor
 
-def register(data: MonitorCreate) -> Tuple[Monitor, bool]:
-    """ — create or replace a monitor."""
+class MonitorIsDownError(Exception):
+    def __init__(self, monitor: Monitor):
+        self.monitor = monitor
+
+
+def register(data: MonitorCreate) -> Monitor:
+    """O(1) — create a new monitor and start its countdown timer.
+
+    Raises:
+        MonitorAlreadyExistsError  — ID exists and is active or paused
+        MonitorIsDownError         — ID exists and is down (use /reset instead)
+    """
     store = _store_or_raise()
-    existed = store.exists(data.id)
+    existing = store.get(data.id)     
+    if existing:
+        if existing.status == MonitorStatus.down:
+            raise MonitorIsDownError(existing)
+        else:
+            raise MonitorAlreadyExistsError(existing)
 
     monitor = Monitor(
         id=data.id,
@@ -50,9 +68,7 @@ def register(data: MonitorCreate) -> Tuple[Monitor, bool]:
         expires_at=_expires_at(data.timeout),
     )
     store.create(monitor)
-    return monitor, not existed
-
-
+    return monitor                     
 def heartbeat(monitor_id: str) -> Optional[Monitor]:
     """
      — reset the countdown.

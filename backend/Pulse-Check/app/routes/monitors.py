@@ -65,6 +65,7 @@ async def register_monitor(payload: MonitorCreate):
         status=monitor.status,
         expires_at=monitor.expires_at,
     )
+
 @router.post(
     "/{monitor_id}/heartbeat",
     response_model=MonitorResponse,

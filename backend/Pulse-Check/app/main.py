@@ -28,6 +28,7 @@ async def startup() -> None:
     start_watcher(store)    
 
 # mount routes
-from app.routes.monitors import router  # noqa: E402
+from app.routes.monitors import router 
+from app.routes.health import health_router
 app.include_router(router)
 app.include_router(health_router)

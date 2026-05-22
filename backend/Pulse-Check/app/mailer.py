@@ -15,16 +15,23 @@ import resend
 
 logger = logging.getLogger("mailer")
 
-resend.api_key = os.environ["RESEND_API_KEY"]
-FROM_EMAIL = os.environ["ALERT_FROM_EMAIL"]
-
 
 def send_alert_email(to: str, device_id: str, alert_time: str, alert_count: int) -> None:
+    
     """
     Fire a device-down alert email.
     Called from watcher._fire_alert() in a daemon thread — failures are logged,
     never raised, so they can't crash the watcher loop.
     """
+    api_key = os.environ.get("RESEND_API_KEY", "")
+    from_email = os.environ.get("ALERT_FROM_EMAIL", "alerts@critmon.com")
+
+    if not api_key:
+        logger.warning("RESEND_API_KEY not set — skipping email for device %s", device_id)
+        return
+
+    resend.api_key = api_key
+
     subject = f"🚨 Device Alert: {device_id} is DOWN"
 
     html = f"""

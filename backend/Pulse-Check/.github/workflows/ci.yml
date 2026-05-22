@@ -4,12 +4,12 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "Pulse-Check/**"       
+      - "AmaliTech-DEG-Project-based-challenges/backend/Pulse-Check/**"       
       - ".github/workflows/ci.yml"
   pull_request:
     branches: ["main"]
     paths:
-      - "Pulse-Check/**"
+      - "AmaliTech-DEG-Project-based-challenges/backend/Pulse-Check/**"
       - ".github/workflows/ci.yml"
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Pulse-Check  
+        working-directory: AmaliTech-DEG-Project-based-challenges/backend/Pulse-Check 
 
     steps:
       - name: Checkout code
@@ -32,7 +32,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('Pulse-Check/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('AmaliTech-DEG-Project-based-challenges/backend/Pulse-Check/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 

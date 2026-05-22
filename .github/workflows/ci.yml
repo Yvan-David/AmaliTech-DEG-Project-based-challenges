@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "AmaliTech-DEG-Project-based-challenges/backend/Pulse-Check/**"       
+      - ".github/workflows/ci.yml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "AmaliTech-DEG-Project-based-challenges/backend/Pulse-Check/**"
+      - ".github/workflows/ci.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: AmaliTech-DEG-Project-based-challenges/backend/Pulse-Check 
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('AmaliTech-DEG-Project-based-challenges/backend/Pulse-Check/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov coveralls httpx
+
+      - name: Run tests with coverage
+        run: |
+          pytest \
+            --cov=app \
+            --cov-report=term-missing \
+            --cov-report=lcov:coverage.lcov \ 
+            --cov-fail-under=80 \              
+            -v
+
+      - name: Upload coverage to Coveralls
+        if: always()  
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}       
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }} 
+          COVERALLS_FLAG_NAME: your-subfolder             
+          COVERALLS_PARALLEL: false                      
+        run: |
+          coveralls --verbose

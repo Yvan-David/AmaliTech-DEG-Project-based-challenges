@@ -4,12 +4,12 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "Pulse-Check/**"       
+      - "backend/Pulse-Check/**"         
       - ".github/workflows/ci.yml"
   pull_request:
     branches: ["main"]
     paths:
-      - "Pulse-Check/**"
+      - "backend/Pulse-Check/**"
       - ".github/workflows/ci.yml"
 
 jobs:
@@ -17,8 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Pulse-Check 
-
+        working-directory: backend/Pulse-Check 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,7 +31,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('AmaliTech-DEG-Project-based-challenges/backend/Pulse-Check/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/Pulse-Check/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -47,16 +46,16 @@ jobs:
           pytest \
             --cov=app \
             --cov-report=term-missing \
-            --cov-report=lcov:coverage.lcov \ 
-            --cov-fail-under=80 \              
+            --cov-report=lcov:coverage.lcov \
+            --cov-fail-under=80 \
             -v
 
       - name: Upload coverage to Coveralls
-        if: always()  
+        if: always()
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}       
-          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }} 
-          COVERALLS_FLAG_NAME: your-subfolder             
-          COVERALLS_PARALLEL: false                      
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+          COVERALLS_FLAG_NAME: pulse-check
+          COVERALLS_PARALLEL: false
         run: |
           coveralls --verbose

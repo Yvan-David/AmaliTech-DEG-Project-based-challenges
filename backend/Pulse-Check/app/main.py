@@ -1,29 +1,33 @@
 import logging
+import os
 
+import redis
+from dotenv import load_dotenv
 from fastapi import FastAPI
 
-from app.routes.monitors import router as monitors_router
+from app.services import monitor_service as svc
+from app.store.redis_store import RedisStore
+from app.watcher import start_watcher
 
+load_dotenv()
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    format="%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
 )
 
-app = FastAPI(
-    title="Pulse Check API",
-    description=(
-        "Dead Man's Switch API for critical infrastructure monitoring. "
-        "Devices register a monitor with a countdown timer; if they stop sending "
-        "heartbeats before the timer expires, an alert is automatically fired."
-    ),
-    version="1.0.0",
-    contact={"name": "CritMon Servers Inc.", "email": "support@critmon.com"},
-)
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
-app.include_router(monitors_router)
+app = FastAPI(title="Pulse-Check API — Watchdog Sentinel")
 
 
-@app.get("/health", tags=["Health"], summary="Health check")
-async def health():
-    """Lightweight liveness probe for load balancers and Docker HEALTHCHECK."""
-    return {"status": "ok"}
+@app.on_event("startup")
+async def startup() -> None:
+    client = redis.from_url(REDIS_URL, decode_responses=False)
+    store = RedisStore(client)
+    svc.init(store)           # inject store into service layer
+    start_watcher(store)      # start background expiry poller
+
+
+# mount routes
+from app.routes.monitors import router  # noqa: E402
+app.include_router(router)

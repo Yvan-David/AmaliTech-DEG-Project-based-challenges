@@ -96,11 +96,18 @@ async def list_monitors():
     return svc.get_all()
 
 
-@router.get(
-    "/{monitor_id}",
-    response_model=Monitor,
-    summary="Get a single monitor — O(1)",
-)
+@router.get("/{monitor_id}", response_model=Monitor)
+async def get_monitor(monitor_id: str):
+    monitor = svc.get_one(monitor_id)
+    if monitor is None:
+        raise HTTPException(status_code=404, detail=f"Monitor '{monitor_id}' not found.")
+
+    # Attach live countdown from Redis TTL — free bonus for the README
+    ttl = svc.get_ttl(monitor_id)
+    data = monitor.model_dump()
+    data["seconds_remaining"] = max(ttl, 0)
+    return data
+
 async def get_monitor(monitor_id: str):
     """Fetch a specific monitor by ID. O(1) hash-map lookup."""
     monitor = svc.get_one(monitor_id)
@@ -110,6 +117,7 @@ async def get_monitor(monitor_id: str):
             detail=f"Monitor '{monitor_id}' not found.",
         )
     return monitor
+    
 
 
 @router.delete(

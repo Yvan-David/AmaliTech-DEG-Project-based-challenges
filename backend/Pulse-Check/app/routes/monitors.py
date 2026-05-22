@@ -12,20 +12,59 @@ router = APIRouter(prefix="/monitors", tags=["Monitors"])
     response_model=MonitorResponse,
     summary="Register a monitor",
 )
+@router.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    response_model=MonitorResponse,
+    summary="Register a monitor",
+)
 async def register_monitor(payload: MonitorCreate):
     """
-    Create a new monitor or replace an existing one.
-    Starts a countdown timer of `timeout` seconds immediately.
+    Create a new monitor and start its countdown timer.
+    Returns 409 if the ID already exists in any state.
     """
-    monitor, created = svc.register(payload)
+    try:
+        monitor = svc.register(payload)
+    except svc.MonitorAlreadyExistsError as exc:
+        m = exc.monitor
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": f"Monitor '{payload.id}' is already registered.",
+                "hint": "Use a different ID, or DELETE this monitor first.",
+                "existing_monitor": {
+                    "id": m.id,
+                    "status": m.status,
+                    "alert_email": m.alert_email,
+                    "webhook_url": m.webhook_url,
+                    "timeout": m.timeout,
+                    "created_at": m.created_at.isoformat(),
+                    "alert_count": m.alert_count,
+                },
+            },
+        )
+    except svc.MonitorIsDownError as exc:
+        m = exc.monitor
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "error": f"Monitor '{payload.id}' exists but is currently down.",
+                "hint": f"Call POST /monitors/{payload.id}/reset to recover it without losing its history.",
+                "existing_monitor": {
+                    "id": m.id,
+                    "status": m.status,
+                    "alert_count": m.alert_count,
+                    "alert_email": m.alert_email,
+                },
+            },
+        )
+
     return MonitorResponse(
-        message="Monitor registered." if created else "Monitor replaced and timer restarted.",
+        message="Monitor registered. Countdown started.",
         monitor_id=monitor.id,
         status=monitor.status,
         expires_at=monitor.expires_at,
     )
-
-
 @router.post(
     "/{monitor_id}/heartbeat",
     response_model=MonitorResponse,
@@ -45,7 +84,7 @@ async def heartbeat(monitor_id: str):
         if existing and existing.status == MonitorStatus.down:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
-                detail=f"Monitor '{monitor_id}' has already triggered a down alert. Re-register it with POST /monitors.",
+                detail={"error": f"Monitor '{monitor_id}' is down.", "hint": f"Call POST /monitors/{monitor_id}/reset to recover it.", "alert_count": existing.alert_count,},
             )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

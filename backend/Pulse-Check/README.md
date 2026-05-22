@@ -54,3 +54,5 @@ Creates a new monitoring entry for a device.
 
 ```http
 POST /monitors
+
+[![Coverage Status](https://coveralls.io/repos/github/Yvan-David/AmaliTech-DEG-Project-based-challenges/badge.svg?branch=main)](https://coveralls.io/github/Yvan-David/AmaliTech-DEG-Project-based-challenges?branch=main)

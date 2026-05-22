@@ -37,6 +37,7 @@ python-multipart==0.0.29
 PyYAML==6.0.3
 redis==7.4.0
 requests==2.34.2
+resend==2.30.1
 rich==15.0.0
 rich-toolkit==0.19.10
 rignore==0.7.6

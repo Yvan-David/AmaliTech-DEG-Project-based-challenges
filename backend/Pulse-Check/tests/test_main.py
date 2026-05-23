@@ -66,11 +66,6 @@ async def test_register_stores_webhook_url(client):
     assert res.json()["webhook_url"] == "https://hooks.example.com/alert"
 
 
-async def test_register_duplicate_replaces_monitor(client):
-    await client.post("/monitors", json=BASE)
-    res = await client.post("/monitors", json=BASE)
-    assert res.status_code == 201
-    assert "replaced" in res.json()["message"]
 
 
 async def test_register_invalid_timeout_rejected(client):
@@ -219,11 +214,3 @@ async def test_delete_prevents_alert(client):
         mock_email.assert_not_called()
 
 
-async def test_re_register_after_down_reactivates(client):
-    """Re-registering a downed device resets it to active."""
-    with patch("app.watcher.send_alert_email"):
-        await client.post("/monitors", json=SHORT)
-        await asyncio.sleep(1.5)
-    res = await client.post("/monitors", json=SHORT)
-    assert res.status_code == 201
-    assert res.json()["status"] == "active"

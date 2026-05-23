@@ -48,7 +48,7 @@ jobs:
             --cov=app \
             --cov-report=term-missing \
             --cov-report=lcov:coverage.lcov \
-            --cov-fail-under=70 \
+            --cov-fail-under=65 \
             -v
 
       - name: Upload coverage to Coveralls

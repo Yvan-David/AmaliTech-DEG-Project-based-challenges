@@ -3,7 +3,7 @@
 [![CI](https://github.com/Yvan-David/AmaliTech-DEG-Project-based-challenges/actions/workflows/ci.yml/badge.svg)](https://github.com/Yvan-David/AmaliTech-DEG-Project-based-challenges/actions)
 
 
-[![Coverage Status](https://coveralls.io/repos/github/Yvan-David/AmaliTech-DEG-Project-based-challenges/badge.svg?branch=main?v=1)](https://coveralls.io/github/Yvan-David/AmaliTech-DEG-Project-based-challenges?branch=main)
+[![Coverage Status](https://coveralls.io/repos/github/Yvan-David/AmaliTech-DEG-Project-based-challenges/badge.svg?v=1?branch=main)](https://coveralls.io/github/Yvan-David/AmaliTech-DEG-Project-based-challenges?branch=main)
 
 A **Dead Man's Switch API** for monitoring remote devices — solar farms, weather stations, unmanned infrastructure. Devices register a monitor with a countdown timer and must send periodic heartbeats to stay alive. If a device goes silent, the system automatically fires an alert email, logs the failure, and optionally hits a webhook.
 
